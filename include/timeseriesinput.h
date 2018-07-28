@@ -38,7 +38,6 @@ class TIMESERIESPROVIDERCOMPONENT_EXPORT TimeSeriesMultiplierInput: public Geome
 
   private:
 
-
     std::unordered_map<int,int> m_geometryMapping;
     TimeSeriesProvider *m_timeSeriesProvider;
 };

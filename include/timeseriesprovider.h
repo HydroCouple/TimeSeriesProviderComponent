@@ -21,7 +21,7 @@ class TIMESERIESPROVIDERCOMPONENT_EXPORT TimeSeriesProvider : public QObject
 
     TimeSeriesProvider(const QString &id, QObject *parent);
 
-    ~TimeSeriesProvider();
+    virtual ~TimeSeriesProvider();
 
     QString id() const;
 

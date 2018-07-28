@@ -33,10 +33,6 @@ TimeSeriesProviderComponent::TimeSeriesProviderComponent(const QString &id, Time
 
 TimeSeriesProviderComponent::~TimeSeriesProviderComponent()
 {
-  if(m_parent)
-  {
-    m_parent->removeClone(this);
-  }
 
   while (m_clones.size())
   {
@@ -44,6 +40,13 @@ TimeSeriesProviderComponent::~TimeSeriesProviderComponent()
     removeClone(clone);
     delete clone;
   }
+
+  if(m_parent)
+  {
+    m_parent->removeClone(this);
+    m_parent = nullptr;
+  }
+
 }
 
 QList<QString> TimeSeriesProviderComponent::validate()
@@ -85,9 +88,9 @@ void TimeSeriesProviderComponent::update(const QList<HydroCouple::IOutput *> &re
 
     applyInputValues();
 
-    double minDate = getMinDateTime();
-
     updateOutputValues(requiredOutputs);
+
+    double minDate = getMinDateTime();
 
     currentDateTimeInternal()->setJulianDay(minDate);
 
@@ -99,7 +102,7 @@ void TimeSeriesProviderComponent::update(const QList<HydroCouple::IOutput *> &re
     {
       if(progressChecker()->performStep(minDate))
       {
-        setStatus(IModelComponent::Updated , "Simulation performed time-step | DateTime: " + QString::number(minDate) , progressChecker()->progress());
+        setStatus(IModelComponent::Updated , "Simulation performed time-step | DateTime: " + QString::number(minDate, 'f') , progressChecker()->progress());
       }
       else
       {
@@ -192,7 +195,7 @@ bool TimeSeriesProviderComponent::removeClone(TimeSeriesProviderComponent *compo
   int removed;
 
 #ifdef USE_OPENMP
-#pragma omp critical
+#pragma omp critical (TimeSeriesProviderComponent)
 #endif
   {
     removed = m_clones.removeAll(component);
@@ -258,7 +261,7 @@ bool TimeSeriesProviderComponent::initializeInputFilesArguments(QString &message
 
   initializeFailureCleanUp();
 
-  if(inputFile.isFile() && inputFile.exists())
+  if(inputFile.isFile() && inputFile.exists() && !inputFile.isDir())
   {
     QFile file(inputFile.absoluteFilePath());
 
@@ -333,9 +336,9 @@ bool TimeSeriesProviderComponent::initializeInputFilesArguments(QString &message
                     {
                       TimeSeries *timeSeriesObj = nullptr;
 
-                      if((timeSeriesObj = TimeSeries::createTimeSeries(cols[0],tsFile, this)))
+                      if((timeSeriesObj = TimeSeries::createTimeSeries(cols[0],tsFile, nullptr)))
                       {
-                        TimeSeriesProvider *timeSeriesProvider = new TimeSeriesProvider(cols[0], this);
+                        TimeSeriesProvider *timeSeriesProvider = new TimeSeriesProvider(cols[0], nullptr);
                         timeSeriesProvider->setTimeSeries(timeSeriesObj);
 
                         QList<HCGeometry*> geometries;
@@ -412,6 +415,10 @@ bool TimeSeriesProviderComponent::initializeInputFilesArguments(QString &message
         }
       }
 
+      currentDateTimeInternal()->setJulianDay(m_beginDateTime);
+      timeHorizonInternal()->setJulianDay(m_beginDateTime);
+      timeHorizonInternal()->setDuration(m_endDateTime - m_beginDateTime);
+
       file.close();
     }
   }
@@ -439,6 +446,8 @@ void TimeSeriesProviderComponent::createInputs()
 
 void TimeSeriesProviderComponent::createOutputs()
 {
+  m_timeSeriesOutputs.clear();
+
   for(size_t i = 0 ; i < m_timeSeriesProviders.size(); i++)
   {
     TimeSeriesProvider *timeSeriesProvider  = m_timeSeriesProviders[i];
@@ -453,12 +462,21 @@ void TimeSeriesProviderComponent::createOutputs()
 
     timeSeriesOutput->setCaption(timeSeriesProvider->id());
     addOutput(timeSeriesOutput);
+    m_timeSeriesOutputs.push_back(timeSeriesOutput);
   }
 }
 
 double TimeSeriesProviderComponent::getMinDateTime()
 {
-  return 0;
+  double currentDate = timeHorizonInternal()->endDateTime();
+
+  for(size_t i = 0; i < m_timeSeriesOutputs.size(); i++)
+  {
+    TimeSeriesOutput *timeSeriesOutput = m_timeSeriesOutputs[i];
+    currentDate = std::min(timeSeriesOutput->currentDateTime(), currentDate);
+  }
+
+  return currentDate;
 }
 
 const unordered_map<string, int> TimeSeriesProviderComponent::m_inputFileFlags({

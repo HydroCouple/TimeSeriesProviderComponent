@@ -161,7 +161,7 @@ void TimeSeriesOutput::updateValues()
 
     int lastDateTimeIndex = timeCount() - 1;
     DateTime *lastDateTime = m_times[lastDateTimeIndex];
-    lastDateTime->setJulianDay(lastDateTimeIndex);
+    lastDateTime->setJulianDay(m_currentDateTime);
 
     if(m_currentDateTime <= m_modelComponent->endDateTime())
     {

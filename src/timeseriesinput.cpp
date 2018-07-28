@@ -14,7 +14,8 @@ TimeSeriesMultiplierInput::TimeSeriesMultiplierInput(TimeSeriesProvider *timeSer
                                                      IGeometry::GeometryType geometryType,
                                                      Quantity *valueDefinition,
                                                      TimeSeriesProviderComponent *component):
-  GeometryInputDouble(timeSeriesProvider->id(), geometryType, geometryDimension, valueDefinition, component)
+  GeometryInputDouble(timeSeriesProvider->id(), geometryType, geometryDimension, valueDefinition, component),
+  m_timeSeriesProvider(timeSeriesProvider)
 {
   addGeometries(timeSeriesProvider->geometries());
 }
