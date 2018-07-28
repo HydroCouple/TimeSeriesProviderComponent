@@ -79,9 +79,9 @@ class TIMESERIESPROVIDERCOMPONENT_EXPORT TimeSeriesProviderComponent : public Ab
     TimeSeriesProviderComponent *m_parent;
     QList<HydroCouple::ICloneableModelComponent*> m_clones;
 
-    static const std::unordered_map<std::string,int> m_inputFileFlags,
-                                                     m_optionsFlags,
-                                                     m_geomMultiplierFlags;
+    static const std::unordered_map<std::string,int> m_inputFileFlags;
+    static const std::unordered_map<std::string,int> m_optionsFlags;
+    static const std::unordered_map<std::string,int> m_geomMultiplierFlags;
 
 };
 
