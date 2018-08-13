@@ -151,72 +151,75 @@ void TimeSeriesOutput::updateValues(IInput *querySpecifier)
 
 void TimeSeriesOutput::updateValues()
 {
-  moveDataToPrevTime();
 
-  m_currentIndex ++;
 
-  if(m_currentIndex >= 0 && m_currentIndex < m_timeSeriesProvider->timeSeries()->numRows())
+  int lastDateTimeIndex = timeCount() - 1;
+  DateTime *lastDateTime = m_times[lastDateTimeIndex];
+
+  if(lastDateTime->julianDay() < m_modelComponent->nextDateTime())
   {
-    m_currentDateTime = m_timeSeriesProvider->timeSeries()->dateTime(m_currentIndex);
+    moveDataToPrevTime();
 
-    int lastDateTimeIndex = timeCount() - 1;
-    DateTime *lastDateTime = m_times[lastDateTimeIndex];
-    lastDateTime->setJulianDay(m_currentDateTime);
+    m_currentIndex = m_timeSeriesProvider->timeSeries()->findDateTimeIndex(m_modelComponent->nextDateTime(), m_currentIndex) + 1;
 
-    if(m_currentDateTime <= m_modelComponent->endDateTime())
+    if(m_currentIndex >= 0 && m_currentIndex < m_timeSeriesProvider->timeSeries()->numRows())
     {
-      if(geometryCount() == m_timeSeriesProvider->timeSeries()->numColumns())
+      m_currentDateTime = m_timeSeriesProvider->timeSeries()->dateTime(m_currentIndex);
+
+      DateTime *lastDateTime = m_times[lastDateTimeIndex];
+      lastDateTime->setJulianDay(m_currentDateTime);
+
+      if(m_currentDateTime <= m_modelComponent->endDateTime())
       {
-        if(m_timeSeriesProvider->geometryMultiplierAttribute() ==  TimeSeriesProvider::Length &&
-           (this->geometryType() == IGeometry::LineString ||
-            this->geometryType() == IGeometry::LineStringM ||
-            this->geometryType() == IGeometry::LineStringZ ||
-            this->geometryType() == IGeometry::LineStringZM))
+        if(geometryCount() == m_timeSeriesProvider->timeSeries()->numColumns())
         {
-          for(int j = 0 ; j < geometryCount() ; j++)
+          if(m_timeSeriesProvider->geometryMultiplierAttribute() ==  TimeSeriesProvider::Length &&
+             (this->geometryType() == IGeometry::LineString ||
+              this->geometryType() == IGeometry::LineStringM ||
+              this->geometryType() == IGeometry::LineStringZ ||
+              this->geometryType() == IGeometry::LineStringZM))
           {
-            ILineString *lineString = dynamic_cast<ILineString*>(geometry(j));
-            double value = m_timeSeriesProvider->timeSeries()->value(m_currentIndex, j)  *  m_timeSeriesProvider->multiplier() * lineString->length();
-            setValue(timeCount() - 1, j, &value);
+            for(int j = 0 ; j < geometryCount() ; j++)
+            {
+              ILineString *lineString = dynamic_cast<ILineString*>(geometry(j));
+              double value = m_timeSeriesProvider->timeSeries()->value(m_currentIndex, j)  *  m_timeSeriesProvider->multiplier() * lineString->length();
+              setValue(timeCount() - 1, j, &value);
+            }
+          }
+          else
+          {
+            for(int j = 0 ; j < geometryCount() ; j++)
+            {
+              double value = m_timeSeriesProvider->timeSeries()->value(m_currentIndex, j)     *  m_timeSeriesProvider->multiplier();
+              setValue(timeCount() - 1, j, &value);
+            }
           }
         }
         else
         {
-          for(int j = 0 ; j < geometryCount() ; j++)
+          if(m_timeSeriesProvider->geometryMultiplierAttribute() ==  TimeSeriesProvider::Length &&
+             (this->geometryType() == IGeometry::LineString ||
+              this->geometryType() == IGeometry::LineStringM ||
+              this->geometryType() == IGeometry::LineStringZ ||
+              this->geometryType() == IGeometry::LineStringZM))
           {
-            double value = m_timeSeriesProvider->timeSeries()->value(m_currentIndex, j)     *  m_timeSeriesProvider->multiplier();
-            setValue(timeCount() - 1, j, &value);
+            for(int j = 0 ; j < geometryCount() ; j++)
+            {
+              ILineString *lineString = dynamic_cast<ILineString*>(geometry(j));
+              double value = m_timeSeriesProvider->timeSeries()->value(m_currentIndex) * m_timeSeriesProvider->multiplier() * lineString->length();
+              setValue(timeCount() - 1, j, &value);
+            }
           }
-        }
-      }
-      else
-      {
-        if(m_timeSeriesProvider->geometryMultiplierAttribute() ==  TimeSeriesProvider::Length &&
-           (this->geometryType() == IGeometry::LineString ||
-            this->geometryType() == IGeometry::LineStringM ||
-            this->geometryType() == IGeometry::LineStringZ ||
-            this->geometryType() == IGeometry::LineStringZM))
-        {
-          for(int j = 0 ; j < geometryCount() ; j++)
+          else
           {
-            ILineString *lineString = dynamic_cast<ILineString*>(geometry(j));
-            double value = m_timeSeriesProvider->timeSeries()->value(m_currentIndex) * m_timeSeriesProvider->multiplier() * lineString->length();
-            setValue(timeCount() - 1, j, &value);
-          }
-        }
-        else
-        {
-          for(int j = 0 ; j < geometryCount() ; j++)
-          {
-            double value = m_timeSeriesProvider->timeSeries()->value(m_currentIndex)  *  m_timeSeriesProvider->multiplier();
-            setValue(timeCount() - 1, j, &value);
+            for(int j = 0 ; j < geometryCount() ; j++)
+            {
+              double value = m_timeSeriesProvider->timeSeries()->value(m_currentIndex)  *  m_timeSeriesProvider->multiplier();
+              setValue(timeCount() - 1, j, &value);
+            }
           }
         }
       }
     }
-  }
-  else
-  {
-    m_currentDateTime = m_modelComponent->endDateTime() + 10;
   }
 }

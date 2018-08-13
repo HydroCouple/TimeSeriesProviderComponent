@@ -86,23 +86,23 @@ void TimeSeriesProviderComponent::update(const QList<HydroCouple::IOutput *> &re
   {
     setStatus(IModelComponent::Updating);
 
+    m_currentDateTime += m_stepSize;
+
     applyInputValues();
 
     updateOutputValues(requiredOutputs);
 
-    double minDate = getMinDateTime();
+    currentDateTimeInternal()->setJulianDay(m_currentDateTime);
 
-    currentDateTimeInternal()->setJulianDay(minDate);
-
-    if(minDate >=  m_endDateTime)
+    if(m_currentDateTime >=  m_endDateTime)
     {
       setStatus(IModelComponent::Done , "Simulation finished successfully", 100);
     }
     else
     {
-      if(progressChecker()->performStep(minDate))
+      if(progressChecker()->performStep(m_currentDateTime))
       {
-        setStatus(IModelComponent::Updated , "Simulation performed time-step | DateTime: " + QString::number(minDate, 'f') , progressChecker()->progress());
+        setStatus(IModelComponent::Updated , "Simulation performed time-step | DateTime: " + QString::number(m_currentDateTime, 'f') , progressChecker()->progress());
       }
       else
       {
@@ -188,6 +188,11 @@ double TimeSeriesProviderComponent::startDateTime() const
 double TimeSeriesProviderComponent::endDateTime() const
 {
   return m_endDateTime;
+}
+
+double TimeSeriesProviderComponent::nextDateTime() const
+{
+  return m_currentDateTime;
 }
 
 bool TimeSeriesProviderComponent::removeClone(TimeSeriesProviderComponent *component)
@@ -419,6 +424,9 @@ bool TimeSeriesProviderComponent::initializeInputFilesArguments(QString &message
       timeHorizonInternal()->setJulianDay(m_beginDateTime);
       timeHorizonInternal()->setDuration(m_endDateTime - m_beginDateTime);
 
+      m_currentDateTime = m_beginDateTime;
+      initializeTimeVariables();
+
       file.close();
     }
   }
@@ -466,17 +474,21 @@ void TimeSeriesProviderComponent::createOutputs()
   }
 }
 
-double TimeSeriesProviderComponent::getMinDateTime()
+void TimeSeriesProviderComponent::initializeTimeVariables()
 {
-  double currentDate = timeHorizonInternal()->endDateTime();
+  m_stepSize = timeHorizonInternal()->duration();
 
-  for(size_t i = 0; i < m_timeSeriesOutputs.size(); i++)
+  for(size_t i = 0; i < m_timeSeriesProviders.size(); i++)
   {
-    TimeSeriesOutput *timeSeriesOutput = m_timeSeriesOutputs[i];
-    currentDate = std::min(timeSeriesOutput->currentDateTime(), currentDate);
+    TimeSeries *timeSeries = m_timeSeriesProviders[i]->timeSeries();
+
+    for(int j = 1; j < timeSeries->numRows(); j++)
+    {
+      m_stepSize = std::min(m_stepSize,  timeSeries->dateTime(j) - timeSeries->dateTime(j-1));
+    }
   }
 
-  return currentDate;
+  m_stepSize /= 2.0;
 }
 
 const unordered_map<string, int> TimeSeriesProviderComponent::m_inputFileFlags({

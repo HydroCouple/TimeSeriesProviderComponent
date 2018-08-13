@@ -41,6 +41,8 @@ class TIMESERIESPROVIDERCOMPONENT_EXPORT TimeSeriesProviderComponent : public Ab
 
     double endDateTime() const;
 
+    double nextDateTime() const;
+
   protected:
 
     bool removeClone(TimeSeriesProviderComponent *component);
@@ -61,7 +63,7 @@ class TIMESERIESPROVIDERCOMPONENT_EXPORT TimeSeriesProviderComponent : public Ab
 
     void createOutputs() override;
 
-    double getMinDateTime();
+    void initializeTimeVariables();
 
   private:
 
@@ -74,6 +76,8 @@ class TIMESERIESPROVIDERCOMPONENT_EXPORT TimeSeriesProviderComponent : public Ab
     std::vector<TimeSeriesOutput*> m_timeSeriesOutputs;
 
     double m_beginDateTime,
+           m_currentDateTime,
+           m_stepSize,
            m_endDateTime;
 
     TimeSeriesProviderComponent *m_parent;
