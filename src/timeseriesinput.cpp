@@ -93,11 +93,7 @@ void TimeSeriesMultiplierInput::applyData()
       double value = 0;
       geometryDataItem->getValue(it.second, & value);
       setValue( it.first, &value);
-
-      if(value)
-      {
-        m_timeSeriesProvider->setMultiplier(value);
-      }
+      m_timeSeriesProvider->setMultiplier(value);
     }
   }
 }

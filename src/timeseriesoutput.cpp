@@ -27,7 +27,7 @@ TimeSeriesOutput::TimeSeriesOutput(TimeSeriesProvider *provider,
 {
   addGeometries(provider->geometries());
 
-  m_currentDateTime = m_modelComponent->endDateTime() + 10;
+  m_currentDateTime = m_modelComponent->startDateTime() + 10;
 
   for(int i = 0 ; i < m_timeSeriesProvider->timeSeries()->numRows() - 1 ; i++)
   {
@@ -84,7 +84,6 @@ TimeSeriesOutput::TimeSeriesOutput(TimeSeriesProvider *provider,
           for(int j = 0 ; j < geometryCount() ; j++)
           {
             ILineString *lineString = dynamic_cast<ILineString*>(geometry(j));
-
             double value1 = m_timeSeriesProvider->timeSeries()->value(i)     *  m_timeSeriesProvider->multiplier() * lineString->length();
             double value2 = m_timeSeriesProvider->timeSeries()->value(i + 1) *  m_timeSeriesProvider->multiplier() * lineString->length();
 
