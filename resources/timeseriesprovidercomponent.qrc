@@ -1,0 +1,5 @@
+<RCC>
+    <qresource prefix="/TimeSeriesProviderComponent">
+        <file alias="timeseriesprovidercomponenticon">images/tsprovidercomponenticon.png</file>
+    </qresource>
+</RCC>

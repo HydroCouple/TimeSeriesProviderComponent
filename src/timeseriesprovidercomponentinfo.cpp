@@ -12,7 +12,7 @@ TimeSeriesProviderComponentInfo::TimeSeriesProviderComponentInfo(QObject *parent
 
   setId("A TimeSeries Provider Component 1.0.0");
   setCaption("TimeSeries Provider Component");
-  setIconFilePath("./../../resources/images/hydrocouplecomposer.png");
+  setIconFilePath(":/TimeSeriesProviderComponent/timeseriesprovidercomponenticon");
   setDescription("A one-dimensional channel heat and solute transport model.");
   setCategory("Data\\Spatiotemporal");
   setCopyright("");

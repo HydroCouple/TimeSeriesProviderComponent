@@ -205,7 +205,8 @@ void TimeSeriesOutput::updateValues()
             for(int j = 0 ; j < geometryCount() ; j++)
             {
               ILineString *lineString = dynamic_cast<ILineString*>(geometry(j));
-              double value = m_timeSeriesProvider->timeSeries()->value(m_currentIndex) * m_timeSeriesProvider->multiplier() * lineString->length();
+              double avalue =  m_timeSeriesProvider->timeSeries()->value(m_currentIndex);
+              double value = avalue * m_timeSeriesProvider->multiplier() * lineString->length();
               setValue(timeCount() - 1, j, &value);
             }
           }

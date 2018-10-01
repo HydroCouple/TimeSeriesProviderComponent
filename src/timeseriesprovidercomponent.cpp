@@ -394,14 +394,14 @@ bool TimeSeriesProviderComponent::initializeInputFilesArguments(QString &message
                       }
                       else
                       {
-                        message = "Unable to read ts file";
+                        message = "Unable to read ts file: "+ tsFile.filePath();
                         return false;
                       }
 
                     }
                     else
                     {
-                      message = "Time series file/geometry file does not exist";
+                      message = "Time series file/geometry file does not exist: "+ inputFile.filePath();
                       return false;
                     }
                   }

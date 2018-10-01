@@ -39,21 +39,20 @@ INCLUDEPATH += .\
 
 
 HEADERS += ./include/stdafx.h \
-    include/timeseriesprovidercomponent_global.h \
-    include/timeseriesprovidercomponentinfo.h \
-    include/timeseriesprovidercomponent.h \
-    include/timeseriesprovider.h \
-    include/timeseriesinput.h \
-    include/timeseriesoutput.h
+           ./include/timeseriesprovidercomponent_global.h \
+           ./include/timeseriesprovidercomponentinfo.h \
+           ./include/timeseriesprovidercomponent.h \
+           ./include/timeseriesprovider.h \
+           ./include/timeseriesinput.h \
+           ./include/timeseriesoutput.h
 
 
 SOURCES +=./src/stdafx.cpp \ 
-    src/timeseriesprovidercomponentinfo.cpp \
-    src/timeseriesprovidercomponent.cpp \
-    src/timeseriesprovider.cpp \
-    src/timeseriesinput.cpp \
-    src/timeseriesoutput.cpp
-
+          ./src/timeseriesprovidercomponentinfo.cpp \
+          ./src/timeseriesprovidercomponent.cpp \
+          ./src/timeseriesprovider.cpp \
+          ./src/timeseriesinput.cpp \
+          ./src/timeseriesoutput.cpp
 
 macx{
 
@@ -314,3 +313,6 @@ CONFIG(release, debug|release) {
         }
     }
 }
+
+RESOURCES += \
+    resources/timeseriesprovidercomponent.qrc
