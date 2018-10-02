@@ -13,7 +13,7 @@ TimeSeriesProviderComponentInfo::TimeSeriesProviderComponentInfo(QObject *parent
   setId("A TimeSeries Provider Component 1.0.0");
   setCaption("TimeSeries Provider Component");
   setIconFilePath(":/TimeSeriesProviderComponent/timeseriesprovidercomponenticon");
-  setDescription("A one-dimensional channel heat and solute transport model.");
+  setDescription("A time series provider for models");
   setCategory("Data\\Spatiotemporal");
   setCopyright("");
   setVendor("");
