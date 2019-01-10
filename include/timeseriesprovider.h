@@ -2,7 +2,7 @@
 #define TIMESERIESPROVIDER_H
 
 #include "timeseriesprovidercomponent_global.h"
-#include "timeseries.h"
+#include "temporal/timeseries.h"
 
 class HCGeometry;
 
