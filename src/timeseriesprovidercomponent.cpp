@@ -264,6 +264,8 @@ bool TimeSeriesProviderComponent::initializeInputFilesArguments(QString &message
   QString inputFilePath = (*m_inputFilesArgument)["Input File"];
   QFileInfo inputFile = getAbsoluteFilePath(inputFilePath);
 
+  m_timeSeriesDesc.clear();
+
   initializeFailureCleanUp();
 
   if(inputFile.isFile() && inputFile.exists() && !inputFile.isDir())
@@ -330,9 +332,9 @@ bool TimeSeriesProviderComponent::initializeInputFilesArguments(QString &message
                 break;
               case 2:
                 {
-                  QStringList cols = line.split(delimiters, QString::SkipEmptyParts);
+                  QStringList cols = TimeSeries::splitLine(line, "\\,|\\t|\\;|\\s");
 
-                  if(cols.size() == 5)
+                  if(cols.size() >= 5)
                   {
                     QFileInfo tsFile = getAbsoluteFilePath(cols[1]);
                     QFileInfo geomFile = getAbsoluteFilePath(cols[2]);
@@ -391,6 +393,15 @@ bool TimeSeriesProviderComponent::initializeInputFilesArguments(QString &message
                         }
 
                         m_timeSeriesProviders.push_back(timeSeriesProvider);
+
+                        if(cols.size() >= 6)
+                        {
+                          m_timeSeriesDesc.push_back(cols[5].toStdString());
+                        }
+                        else
+                        {
+                          m_timeSeriesDesc.push_back(cols[0].toStdString());
+                        }
                       }
                       else
                       {
@@ -447,7 +458,8 @@ void TimeSeriesProviderComponent::createInputs()
      QSharedPointer<HCGeometry> geometry = timeSeriesProvider->geometries()[0];
      Quantity *unitless = Quantity::unitLessValues("Unitless", QVariant::Double, this);
      TimeSeriesMultiplierInput *timeSeriesMultiplierInput = new TimeSeriesMultiplierInput(timeSeriesProvider, m_geometryDimension, geometry->geometryType(), unitless, this);
-     timeSeriesMultiplierInput->setCaption(timeSeriesProvider->id());
+     timeSeriesMultiplierInput->setCaption(timeSeriesProvider->id() + " Multiplier");
+//     timeSeriesMultiplierInput->setDescription(QString::fromStdString(m_timeSeriesDesc[i]));
      addInput(timeSeriesMultiplierInput);
    }
 }
@@ -468,7 +480,8 @@ void TimeSeriesProviderComponent::createOutputs()
                                                               unitless,
                                                               this);
 
-    timeSeriesOutput->setCaption(timeSeriesProvider->id());
+    timeSeriesOutput->setCaption(QString::fromStdString(m_timeSeriesDesc[i]));
+    timeSeriesOutput->setDescription(QString::fromStdString(m_timeSeriesDesc[i]));
     addOutput(timeSeriesOutput);
     m_timeSeriesOutputs.push_back(timeSeriesOutput);
   }

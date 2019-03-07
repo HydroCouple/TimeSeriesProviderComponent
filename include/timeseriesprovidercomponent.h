@@ -74,6 +74,7 @@ class TIMESERIESPROVIDERCOMPONENT_EXPORT TimeSeriesProviderComponent : public Ab
 
     std::vector<TimeSeriesProvider*> m_timeSeriesProviders;
     std::vector<TimeSeriesOutput*> m_timeSeriesOutputs;
+    std::vector<std::string> m_timeSeriesDesc;
 
     double m_beginDateTime,
            m_currentDateTime,
