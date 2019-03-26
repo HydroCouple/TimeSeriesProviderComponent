@@ -73,7 +73,7 @@ class TIMESERIESPROVIDERCOMPONENT_EXPORT TimeSeriesProviderComponent : public Ab
     IdBasedArgumentString *m_inputFilesArgument;
 
     std::vector<TimeSeriesProvider*> m_timeSeriesProviders;
-    std::vector<TimeSeriesOutput*> m_timeSeriesOutputs;
+//    std::vector<TimeSeriesOutput*> m_timeSeriesOutputs;
     std::vector<std::string> m_timeSeriesDesc;
 
     double m_beginDateTime,

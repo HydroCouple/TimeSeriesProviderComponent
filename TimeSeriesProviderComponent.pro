@@ -44,7 +44,8 @@ HEADERS += ./include/stdafx.h \
            ./include/timeseriesprovidercomponent.h \
            ./include/timeseriesprovider.h \
            ./include/timeseriesinput.h \
-           ./include/timeseriesoutput.h
+           ./include/timeseriesoutput.h \
+           ./include/timeseriesidbasedoutput.h
 
 
 SOURCES +=./src/stdafx.cpp \ 
@@ -52,7 +53,8 @@ SOURCES +=./src/stdafx.cpp \
           ./src/timeseriesprovidercomponent.cpp \
           ./src/timeseriesprovider.cpp \
           ./src/timeseriesinput.cpp \
-          ./src/timeseriesoutput.cpp
+          ./src/timeseriesoutput.cpp \
+          ./src/timeseriesidbasedoutput.cpp
 
 macx{
 
@@ -215,7 +217,7 @@ CONFIG(debug, debug|release) {
     }
 
     macx {
-       QMAKE_CXXFLAGS += -O3
+       QMAKE_CXXFLAGS += -O1
     }
 
     linux {

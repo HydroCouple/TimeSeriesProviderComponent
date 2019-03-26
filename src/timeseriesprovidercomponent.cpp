@@ -12,8 +12,10 @@
 #include "timeseriesinput.h"
 #include "spatial/geometry.h"
 #include "timeseriesoutput.h"
+#include "timeseriesidbasedoutput.h"
 
 #include <QTextStream>
+#include <QDebug>
 
 using namespace HydroCouple;
 using namespace std;
@@ -308,17 +310,17 @@ bool TimeSeriesProviderComponent::initializeInputFilesArguments(QString &message
                 {
                   QStringList cols = line.split(delimiters, QString::SkipEmptyParts);
 
+                  qDebug() << line;
+
                   if(cols.size() == 3)
                   {
                     QDateTime dateTime;
 
-                    if(cols[0] == "START_DATETIME" &&
-                       SDKTemporal::DateTime::tryParse(cols[1] + " " + cols[2], dateTime))
+                    if(cols[0] == "START_DATETIME" && SDKTemporal::DateTime::tryParse(cols[1] + " " + cols[2], dateTime))
                     {
                       m_beginDateTime = SDKTemporal::DateTime::toJulianDays(dateTime);
                     }
-                    else if( cols[0] == "END_DATETIME" &&
-                             SDKTemporal::DateTime::tryParse(cols[1] + " " + cols[2], dateTime))
+                    else if(cols[0] == "END_DATETIME" && SDKTemporal::DateTime::tryParse(cols[1] + " " + cols[2], dateTime))
                     {
                       m_endDateTime = SDKTemporal::DateTime::toJulianDays(dateTime);
                     }
@@ -334,85 +336,148 @@ bool TimeSeriesProviderComponent::initializeInputFilesArguments(QString &message
                 {
                   QStringList cols = TimeSeries::splitLine(line, "\\,|\\t|\\;|\\s");
 
-                  if(cols.size() >= 5)
+                  if(cols.size() >= 6)
                   {
-                    QFileInfo tsFile = getAbsoluteFilePath(cols[1]);
-                    QFileInfo geomFile = getAbsoluteFilePath(cols[2]);
-
-                    if(tsFile.exists() && geomFile.exists())
+                    if(!QString::compare(cols[1], "SPATIAL", Qt::CaseInsensitive))
                     {
-                      TimeSeries *timeSeriesObj = nullptr;
 
-                      if((timeSeriesObj = TimeSeries::createTimeSeries(cols[0],tsFile, nullptr)))
+                      QFileInfo tsFile = getAbsoluteFilePath(cols[2]);
+                      QFileInfo geomFile = getAbsoluteFilePath(cols[3]);
+
+                      if(tsFile.exists() && geomFile.exists())
                       {
-                        TimeSeriesProvider *timeSeriesProvider = new TimeSeriesProvider(cols[0], nullptr);
-                        timeSeriesProvider->setTimeSeries(timeSeriesObj);
+                        TimeSeries *timeSeriesObj = nullptr;
 
-                        QList<HCGeometry*> geometries;
-
-                        Envelope envp;
-
-                        if(!GeometryFactory::readGeometryFromFile(geomFile.absoluteFilePath(), geometries, envp, error))
+                        if((timeSeriesObj = TimeSeries::createTimeSeries(cols[0],tsFile, nullptr)))
                         {
-                          return false;
-                        }
+                          TimeSeriesProvider *timeSeriesProvider = new TimeSeriesProvider(cols[0], nullptr);
+                          timeSeriesProvider->setTimeSeries(timeSeriesObj);
 
-                        QList<QSharedPointer<HCGeometry>> sharedGeoms;
+                          QList<HCGeometry*> geometries;
 
-                        for(HCGeometry *geometry : geometries)
-                        {
-                          sharedGeoms.push_back(QSharedPointer<HCGeometry>(geometry));
-                        }
+                          Envelope envp;
 
-                        timeSeriesProvider->setGeometries(sharedGeoms);
-
-                        bool multOk = false;
-                        double mult = cols[3].toDouble(&multOk);
-
-                        if(multOk)
-                          timeSeriesProvider->setMultiplier(mult);
-
-                        auto it = m_geomMultiplierFlags.find(cols[4].toStdString());
-
-                        if(it != m_geomMultiplierFlags.end())
-                        {
-                          int type = it->second;
-
-                          switch(type)
+                          if(!GeometryFactory::readGeometryFromFile(geomFile.absoluteFilePath(), geometries, envp, error))
                           {
-                            case 2:
-                              timeSeriesProvider->setGeometryMultiplierAttribute(TimeSeriesProvider::Length);
-                              break;
-                            case 3:
-                              timeSeriesProvider->setGeometryMultiplierAttribute(TimeSeriesProvider::Area);
-                              break;
-                            default:
-                              timeSeriesProvider->setGeometryMultiplierAttribute(TimeSeriesProvider::None);
-                              break;
+                            return false;
                           }
-                        }
 
-                        m_timeSeriesProviders.push_back(timeSeriesProvider);
+                          QList<QSharedPointer<HCGeometry>> sharedGeoms;
 
-                        if(cols.size() >= 6)
-                        {
-                          m_timeSeriesDesc.push_back(cols[5].toStdString());
+                          for(HCGeometry *geometry : geometries)
+                          {
+                            sharedGeoms.push_back(QSharedPointer<HCGeometry>(geometry));
+                          }
+
+                          timeSeriesProvider->setGeometries(sharedGeoms);
+
+                          bool multOk = false;
+                          double mult = cols[4].toDouble(&multOk);
+
+                          if(multOk)
+                            timeSeriesProvider->setMultiplier(mult);
+
+                          auto it = m_geomMultiplierFlags.find(cols[5].toStdString());
+
+                          if(it != m_geomMultiplierFlags.end())
+                          {
+                            int type = it->second;
+
+                            switch(type)
+                            {
+                              case 2:
+                                timeSeriesProvider->setGeometryMultiplierAttribute(TimeSeriesProvider::Length);
+                                break;
+                              case 3:
+                                timeSeriesProvider->setGeometryMultiplierAttribute(TimeSeriesProvider::Area);
+                                break;
+                              default:
+                                timeSeriesProvider->setGeometryMultiplierAttribute(TimeSeriesProvider::None);
+                                break;
+                            }
+                          }
+
+                          m_timeSeriesProviders.push_back(timeSeriesProvider);
+
+                          if(cols.size() >= 7)
+                          {
+                            m_timeSeriesDesc.push_back(cols[6].toStdString());
+                          }
+                          else
+                          {
+                            m_timeSeriesDesc.push_back(cols[0].toStdString());
+                          }
                         }
                         else
                         {
-                          m_timeSeriesDesc.push_back(cols[0].toStdString());
+                          message = "Unable to read ts file: "+ tsFile.filePath();
+                          return false;
+                        }
+
+                      }
+                      else
+                      {
+                        message = "Time series file/geometry file does not exist: "+ inputFile.filePath();
+                        return false;
+                      }
+                    }
+                    else
+                    {
+                      message = "Timeseries type specified is incorrect: "+ cols[1];
+                      return false;
+                    }
+                  }
+                  else if(cols.size() >= 4)
+                  {
+                    if(!QString::compare(cols[1], "ID", Qt::CaseInsensitive))
+                    {
+
+                      QFileInfo tsFile = getAbsoluteFilePath(cols[2]);
+
+                      if(tsFile.exists())
+                      {
+                        TimeSeries *timeSeriesObj = nullptr;
+
+                        if((timeSeriesObj = TimeSeries::createTimeSeries(cols[0],tsFile, nullptr)))
+                        {
+                          TimeSeriesProvider *timeSeriesProvider = new TimeSeriesProvider(cols[0], nullptr);
+                          timeSeriesProvider->setTimeSeries(timeSeriesObj);
+                          timeSeriesProvider->setTimeSeriesType(TimeSeriesProvider::Id);
+
+                          bool multOk = false;
+                          double mult = cols[3].toDouble(&multOk);
+
+                          if(multOk)
+                          {
+                            timeSeriesProvider->setMultiplier(mult);
+                          }
+
+                          m_timeSeriesProviders.push_back(timeSeriesProvider);
+
+                          if(cols.size() >= 5)
+                          {
+                            m_timeSeriesDesc.push_back(cols[4].toStdString());
+                          }
+                          else
+                          {
+                            m_timeSeriesDesc.push_back(cols[0].toStdString());
+                          }
+                        }
+                        else
+                        {
+                          message = "Unable to read ts file: "+ tsFile.filePath();
+                          return false;
                         }
                       }
                       else
                       {
-                        message = "Unable to read ts file: "+ tsFile.filePath();
+                        message = "Time series file/geometry file does not exist: "+ inputFile.filePath();
                         return false;
                       }
-
                     }
                     else
                     {
-                      message = "Time series file/geometry file does not exist: "+ inputFile.filePath();
+                      message = "Timeseries type specified is incorrect: "+ cols[1];
                       return false;
                     }
                   }
@@ -452,38 +517,65 @@ bool TimeSeriesProviderComponent::initializeInputFilesArguments(QString &message
 
 void TimeSeriesProviderComponent::createInputs()
 {
-   for(size_t i = 0 ; i < m_timeSeriesProviders.size(); i++)
-   {
-     TimeSeriesProvider *timeSeriesProvider  = m_timeSeriesProviders[i];
-     QSharedPointer<HCGeometry> geometry = timeSeriesProvider->geometries()[0];
-     Quantity *unitless = Quantity::unitLessValues("Unitless", QVariant::Double, this);
-     TimeSeriesMultiplierInput *timeSeriesMultiplierInput = new TimeSeriesMultiplierInput(timeSeriesProvider, m_geometryDimension, geometry->geometryType(), unitless, this);
-     timeSeriesMultiplierInput->setCaption(timeSeriesProvider->id() + " Multiplier");
-//     timeSeriesMultiplierInput->setDescription(QString::fromStdString(m_timeSeriesDesc[i]));
-     addInput(timeSeriesMultiplierInput);
-   }
+  for(size_t i = 0 ; i < m_timeSeriesProviders.size(); i++)
+  {
+    TimeSeriesProvider *timeSeriesProvider  = m_timeSeriesProviders[i];
+
+    QList<QSharedPointer<HCGeometry>> geometries = timeSeriesProvider->geometries();
+
+
+    if(geometries.length())
+    {
+      QSharedPointer<HCGeometry> geometry = geometries[0];
+      Quantity *unitless = Quantity::unitLessValues("Unitless", QVariant::Double, this);
+      TimeSeriesMultiplierInput *timeSeriesMultiplierInput = new TimeSeriesMultiplierInput(timeSeriesProvider, m_geometryDimension, geometry->geometryType(), unitless, this);
+      timeSeriesMultiplierInput->setCaption(timeSeriesProvider->id() + " Multiplier");
+      //     timeSeriesMultiplierInput->setDescription(QString::fromStdString(m_timeSeriesDesc[i]));
+      addInput(timeSeriesMultiplierInput);
+    }
+  }
 }
 
 void TimeSeriesProviderComponent::createOutputs()
 {
-  m_timeSeriesOutputs.clear();
+  //  m_timeSeriesOutputs.clear();
 
   for(size_t i = 0 ; i < m_timeSeriesProviders.size(); i++)
   {
     TimeSeriesProvider *timeSeriesProvider  = m_timeSeriesProviders[i];
-    QSharedPointer<HCGeometry> geometry = timeSeriesProvider->geometries()[0];
-    Quantity *unitless = Quantity::unitLessValues("Unitless", QVariant::Double, this);
-    TimeSeriesOutput *timeSeriesOutput = new TimeSeriesOutput(timeSeriesProvider,
-                                                              m_geometryDimension,
-                                                              geometry->geometryType(),
-                                                              m_timeDimension,
-                                                              unitless,
-                                                              this);
 
-    timeSeriesOutput->setCaption(QString::fromStdString(m_timeSeriesDesc[i]));
-    timeSeriesOutput->setDescription(QString::fromStdString(m_timeSeriesDesc[i]));
-    addOutput(timeSeriesOutput);
-    m_timeSeriesOutputs.push_back(timeSeriesOutput);
+    if(timeSeriesProvider->timeSeriesType() == TimeSeriesProvider::Spatial)
+    {
+      QSharedPointer<HCGeometry> geometry = timeSeriesProvider->geometries()[0];
+      Quantity *unitless = Quantity::unitLessValues("Unitless", QVariant::Double, this);
+      TimeSeriesOutput *timeSeriesOutput = new TimeSeriesOutput(timeSeriesProvider,
+                                                                m_geometryDimension,
+                                                                geometry->geometryType(),
+                                                                m_timeDimension,
+                                                                unitless,
+                                                                this);
+
+      timeSeriesOutput->setCaption(QString::fromStdString(m_timeSeriesDesc[i]));
+      timeSeriesOutput->setDescription(QString::fromStdString(m_timeSeriesDesc[i]));
+      addOutput(timeSeriesOutput);
+    }
+    else
+    {
+      Quantity *unitless = Quantity::unitLessValues("Unitless", QVariant::Double, this);
+
+      Dimension *identifierDimension = new Dimension("Identifiers", this);
+
+      TimeSeriesIdBasedOutput *timeSeriesOutput = new TimeSeriesIdBasedOutput(timeSeriesProvider,
+                                                                              identifierDimension,
+                                                                              m_timeDimension,
+                                                                              unitless,
+                                                                              this);
+
+      timeSeriesOutput->setCaption(QString::fromStdString(m_timeSeriesDesc[i]));
+      timeSeriesOutput->setDescription(QString::fromStdString(m_timeSeriesDesc[i]));
+
+      addOutput(timeSeriesOutput);
+    }
   }
 }
 

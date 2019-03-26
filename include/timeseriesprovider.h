@@ -12,6 +12,12 @@ class TIMESERIESPROVIDERCOMPONENT_EXPORT TimeSeriesProvider : public QObject
 
   public:
 
+    enum TimeSeriesType
+    {
+      Spatial,
+      Id
+    };
+
     enum GeometryMultiplierAttribute
     {
       None,
@@ -37,12 +43,17 @@ class TIMESERIESPROVIDERCOMPONENT_EXPORT TimeSeriesProvider : public QObject
 
     void setTimeSeries(TimeSeries *timeSeries);
 
+    TimeSeriesType timeSeriesType() const;
+
+    void setTimeSeriesType(TimeSeriesType timeSeriesType);
+
     QList<QSharedPointer<HCGeometry>> geometries() const;
 
     void setGeometries(const QList<QSharedPointer<HCGeometry>> &geometries);
 
   private:
     QString m_id;
+    TimeSeriesType m_timeSeriesType;
     GeometryMultiplierAttribute m_geometryMultiplierAttribute;
     QList<QSharedPointer<HCGeometry>> m_geometries;
     double m_multiplier;

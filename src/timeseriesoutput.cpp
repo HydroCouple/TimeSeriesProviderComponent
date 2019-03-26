@@ -150,8 +150,6 @@ void TimeSeriesOutput::updateValues(IInput *querySpecifier)
 
 void TimeSeriesOutput::updateValues()
 {
-
-
   int lastDateTimeIndex = timeCount() - 1;
   DateTime *lastDateTime = m_times[lastDateTimeIndex];
 
@@ -222,4 +220,9 @@ void TimeSeriesOutput::updateValues()
       }
     }
   }
+}
+
+TimeSeriesProvider *TimeSeriesOutput::timeSeriesProvider() const
+{
+  return m_timeSeriesProvider;
 }

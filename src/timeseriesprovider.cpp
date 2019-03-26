@@ -5,6 +5,7 @@
 TimeSeriesProvider::TimeSeriesProvider(const QString &id, QObject *parent)
   : QObject(parent),
     m_id(id),
+    m_timeSeriesType(TimeSeriesType::Spatial),
     m_geometryMultiplierAttribute(GeometryMultiplierAttribute::None),
     m_multiplier(1.0),
     m_timeSeries(nullptr)
@@ -53,6 +54,16 @@ TimeSeries *TimeSeriesProvider::timeSeries() const
 void TimeSeriesProvider::setTimeSeries(TimeSeries *timeSeries)
 {
   m_timeSeries = timeSeries;
+}
+
+TimeSeriesProvider::TimeSeriesType TimeSeriesProvider::timeSeriesType() const
+{
+  return m_timeSeriesType;
+}
+
+void TimeSeriesProvider::setTimeSeriesType(TimeSeriesType timeSeriesType)
+{
+  m_timeSeriesType = timeSeriesType;
 }
 
 QList<QSharedPointer<HCGeometry>> TimeSeriesProvider::geometries() const

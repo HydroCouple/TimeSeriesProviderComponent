@@ -1,6 +1,7 @@
 #ifndef TIMESERIESOUTPUT_H
 #define TIMESERIESOUTPUT_H
 
+#include "hydrocoupletemporal.h"
 #include "timeseriesprovidercomponent_global.h"
 #include "spatiotemporal/timegeometryoutput.h"
 
@@ -28,6 +29,8 @@ class TIMESERIESPROVIDERCOMPONENT_EXPORT TimeSeriesOutput : public TimeGeometryO
     void updateValues(HydroCouple::IInput *querySpecifier) override;
 
     void updateValues() override;
+
+    TimeSeriesProvider *timeSeriesProvider() const;
 
   private:
     int m_currentIndex = -1;
