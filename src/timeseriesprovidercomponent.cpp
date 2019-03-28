@@ -310,8 +310,6 @@ bool TimeSeriesProviderComponent::initializeInputFilesArguments(QString &message
                 {
                   QStringList cols = line.split(delimiters, QString::SkipEmptyParts);
 
-                  qDebug() << line;
-
                   if(cols.size() == 3)
                   {
                     QDateTime dateTime;

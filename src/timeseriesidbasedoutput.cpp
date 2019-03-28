@@ -24,15 +24,6 @@ TimeSeriesIdBasedOutput::TimeSeriesIdBasedOutput(TimeSeriesProvider *provider,
 {
   int numRows = m_timeSeriesProvider->timeSeries()->numRows();
 
-  QStringList columnNames;
-
-  for(int i = 0; i < m_timeSeriesProvider->timeSeries()->numColumns(); i++)
-  {
-    columnNames.push_back(m_timeSeriesProvider->timeSeries()->getColumnName(i).trimmed());
-  }
-
-  addIdentifiers(columnNames);
-
   DateTime *dt1 = new DateTime(0, this);
   addTime(dt1);
 
@@ -43,9 +34,18 @@ TimeSeriesIdBasedOutput::TimeSeriesIdBasedOutput(TimeSeriesProvider *provider,
   {
     m_currentDateTime = m_timeSeriesProvider->timeSeries()->dateTime(0);
 
-    timeInternal(0)->setJulianDay(m_currentDateTime);
+    timeInternal(0)->setJulianDay(m_currentDateTime - 0.000000000001);
     timeInternal(1)->setJulianDay(m_currentDateTime);
   }
+
+  QStringList columnNames;
+
+  for(int i = 0; i < m_timeSeriesProvider->timeSeries()->numColumns(); i++)
+  {
+    columnNames.push_back(m_timeSeriesProvider->timeSeries()->getColumnName(i).trimmed());
+  }
+
+  addIdentifiers(columnNames);
 }
 
 TimeSeriesIdBasedOutput::~TimeSeriesIdBasedOutput()
@@ -103,6 +103,8 @@ void TimeSeriesIdBasedOutput::updateValues()
 
       DateTime *lastDateTime = timeInternal(lastDateTimeIndex);
       lastDateTime->setJulianDay(m_currentDateTime);
+
+      resetTimeSpan();
 
       if(m_currentDateTime <= m_modelComponent->endDateTime())
       {
