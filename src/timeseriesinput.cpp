@@ -31,9 +31,11 @@ bool TimeSeriesMultiplierInput::setProvider(IOutput *provider)
 
   if(AbstractInput::setProvider(provider) && provider)
   {
-    IGeometryComponentDataItem *geometryDataItem = dynamic_cast<IGeometryComponentDataItem*>(provider);
+    IGeometryComponentDataItem *geometryDataItem = nullptr;
+    IIdBasedComponentDataItem *idBasedComponentDataItem = nullptr;
 
-    if(geometryDataItem->geometryCount())
+    if((geometryDataItem = dynamic_cast<IGeometryComponentDataItem*>(provider)) &&
+       geometryDataItem->geometryCount())
     {
       for(int i = 0; i < geometryCount() ; i++)
       {
@@ -51,6 +53,26 @@ bool TimeSeriesMultiplierInput::setProvider(IOutput *provider)
         }
       }
     }
+    else if((idBasedComponentDataItem = dynamic_cast<IIdBasedComponentDataItem*>(provider)))
+    {
+      QStringList identifiers = idBasedComponentDataItem->identifiers();
+
+      for(int i = 0; i < geometryCount() ; i++)
+      {
+        IGeometry *myGeometry = geometry(i);
+
+        for(int j = 0; j < identifiers.size() ; j++)
+        {
+          QString providerId = identifiers[j];
+
+          if(!providerId.compare(myGeometry->id()))
+          {
+            m_geometryMapping[i] = j;
+            break;
+          }
+        }
+      }
+    }
 
     return true;
   }
@@ -61,19 +83,25 @@ bool TimeSeriesMultiplierInput::setProvider(IOutput *provider)
 bool TimeSeriesMultiplierInput::canConsume(IOutput *provider, QString &message) const
 {
   IGeometryComponentDataItem *geometryDataItem = nullptr;
+  IIdBasedComponentDataItem *idBasedComponentDataItem = nullptr;
 
   if((geometryDataItem = dynamic_cast<IGeometryComponentDataItem*>(provider)) &&
      (geometryDataItem->geometryType() == IGeometry::LineString ||
       geometryDataItem->geometryType() == IGeometry::LineStringZ ||
-      geometryDataItem->geometryType() == IGeometry::LineStringZM )
-     &&
+      geometryDataItem->geometryType() == IGeometry::LineStringZM) &&
      (provider->valueDefinition()->type() == QVariant::Double ||
       provider->valueDefinition()->type() == QVariant::Int))
   {
     return true;
   }
+  else if((idBasedComponentDataItem = dynamic_cast<IIdBasedComponentDataItem*>(provider)) &&
+          (provider->valueDefinition()->type() == QVariant::Double ||
+           provider->valueDefinition()->type() == QVariant::Int))
+  {
+    return true;
+  }
 
-  message = "Provider must be a LineString";
+  message = "Provider must be a Geometry LineString or an Id based provider";
   return false;
 }
 
@@ -85,6 +113,7 @@ void TimeSeriesMultiplierInput::retrieveValuesFromProvider()
 void TimeSeriesMultiplierInput::applyData()
 {
   IGeometryComponentDataItem *geometryDataItem = nullptr;
+  IIdBasedComponentDataItem *idBasedComponentDataItem = nullptr;
 
   if((geometryDataItem = dynamic_cast<IGeometryComponentDataItem*>(provider())))
   {
@@ -93,6 +122,16 @@ void TimeSeriesMultiplierInput::applyData()
       double value = 0;
       geometryDataItem->getValue(it.second, & value);
       setValue( it.first, &value);
+      m_timeSeriesProvider->setMultiplier(value);
+    }
+  }
+  else if((idBasedComponentDataItem = dynamic_cast<IIdBasedComponentDataItem*>(provider())))
+  {
+    for(auto it : m_geometryMapping)
+    {
+      double value = 0;
+      idBasedComponentDataItem->getValue(it.second, & value);
+      setValue(it.first, &value);
       m_timeSeriesProvider->setMultiplier(value);
     }
   }
@@ -136,7 +175,6 @@ bool TimeSeriesMultiplierInput::equalsGeometry(IGeometry *geom1, IGeometry *geom
         {
           return geom1->equals(geom2);
         }
-        break;
     }
   }
 

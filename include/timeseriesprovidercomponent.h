@@ -21,7 +21,7 @@ class TIMESERIESPROVIDERCOMPONENT_EXPORT TimeSeriesProviderComponent : public Ab
 
     TimeSeriesProviderComponent(const QString &id, TimeSeriesProviderComponentInfo *modelComponentInfo = nullptr);
 
-    virtual ~TimeSeriesProviderComponent();
+    virtual ~TimeSeriesProviderComponent() override;
 
     QList<QString> validate() override;
 

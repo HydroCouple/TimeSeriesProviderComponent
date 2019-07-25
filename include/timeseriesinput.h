@@ -22,7 +22,7 @@ class TIMESERIESPROVIDERCOMPONENT_EXPORT TimeSeriesMultiplierInput: public Geome
                               Quantity *valueDefinition,
                               TimeSeriesProviderComponent *component);
 
-    virtual ~TimeSeriesMultiplierInput();
+    virtual ~TimeSeriesMultiplierInput() override;
 
     bool setProvider(HydroCouple::IOutput *provider) override;
 

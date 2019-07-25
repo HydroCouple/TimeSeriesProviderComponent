@@ -13,7 +13,7 @@ class TIMESERIESPROVIDERCOMPONENT_EXPORT TimeSeriesProviderComponentInfo  : publ
 
     TimeSeriesProviderComponentInfo(QObject *parent = nullptr);
 
-    virtual ~TimeSeriesProviderComponentInfo();
+    virtual ~TimeSeriesProviderComponentInfo() override;
 
     HydroCouple::IModelComponent* createComponentInstance() override;
 };

@@ -22,7 +22,7 @@ class TIMESERIESPROVIDERCOMPONENT_EXPORT TimeSeriesOutput : public TimeGeometryO
                      Quantity *valueDefinition,
                      TimeSeriesProviderComponent *component);
 
-    virtual ~TimeSeriesOutput();
+    virtual ~TimeSeriesOutput() override;
 
     double currentDateTime() const;
 
